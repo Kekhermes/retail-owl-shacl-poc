@@ -1,0 +1,29 @@
+@prefix ex: <https://example.org/retail#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+ex:ShipmentRiskShape a sh:NodeShape ;
+    sh:targetClass ex:Shipment ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:construct """
+            CONSTRUCT {
+                $this <https://example.org/retail#riskBand> "à surveiller"@fr .
+            }
+            WHERE {
+                $this <https://example.org/retail#delayDays> ?days .
+                FILTER (?days > 0 && ?days < 3)
+            }
+        """
+    ] ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:construct """
+            CONSTRUCT {
+                $this <https://example.org/retail#riskBand> "urgent"@fr .
+            }
+            WHERE {
+                $this <https://example.org/retail#delayDays> ?days .
+                FILTER (?days >= 3)
+            }
+        """
+    ] .

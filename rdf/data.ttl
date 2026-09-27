@@ -1,0 +1,20 @@
+@prefix ex:   <https://example.org/retail#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ex:store_main a ex:Store ;
+    rdfs:label "Magasin central"@fr .
+
+ex:shipment_on_time a ex:Shipment ;
+    rdfs:label "Expédition à l'heure"@fr ;
+    ex:deliveredTo ex:store_main ;
+    ex:delayDays 0 .
+
+ex:shipment_watch a ex:Shipment ;
+    rdfs:label "Expédition avec retard à surveiller"@fr ;
+    ex:deliveredTo ex:store_main ;
+    ex:delayDays 2 .
+
+ex:shipment_urgent a ex:Shipment ;
+    rdfs:label "Expédition avec retard important"@fr ;
+    ex:deliveredTo ex:store_main ;
+    ex:delayDays 3 .

@@ -1,0 +1,34 @@
+@prefix ex:   <https://example.org/retail#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+ex:RetailLogisticsOntology a owl:Ontology ;
+    rdfs:label "Ontologie de logistique retail"@fr .
+
+ex:Shipment a owl:Class ;
+    rdfs:label "Expédition"@fr ;
+    rdfs:comment "Un envoi de marchandises vers un magasin."@fr .
+
+ex:Store a owl:Class ;
+    rdfs:label "Magasin"@fr ;
+    rdfs:comment "Un point de vente qui reçoit des expéditions."@fr .
+
+ex:deliveredTo a owl:ObjectProperty ;
+    rdfs:label "est livrée à"@fr ;
+    rdfs:comment "Relie une expédition au magasin qui la reçoit."@fr ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range ex:Store .
+
+ex:delayDays a owl:DatatypeProperty ;
+    rdfs:label "jours de retard"@fr ;
+    rdfs:comment "Nombre entier de jours de retard constaté."@fr ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range xsd:integer .
+
+ex:riskBand a owl:DatatypeProperty ;
+    rdfs:label "bande de risque"@fr ;
+    rdfs:comment "Niveau de risque calculé par les règles de démonstration."@fr ;
+    rdfs:domain ex:Shipment ;
+    rdfs:range rdf:langString .
