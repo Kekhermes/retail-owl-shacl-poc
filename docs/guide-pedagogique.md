@@ -6,7 +6,7 @@ Ce parcours n'exige aucune connaissance préalable de l'ontologie, de RDF ou des
 
 Nous avons trois expéditions destinées au même magasin : une à l'heure, une avec deux jours de retard et une avec trois jours. Pour apprendre à écrire des règles, nous illustrons le classement suivant :
 
-| Expédition | Retard connu | Résultat calculé par le POC |
+| Expédition | Retard connu | Résultat SHACL de la commande par défaut |
 |---|---:|---|
 | `shipment_on_time` | 0 jour | aucune bande calculée |
 | `shipment_watch` | 2 jours | « à surveiller » |
@@ -18,19 +18,24 @@ Ces seuils sont inventés pour apprendre ; ils ne constituent pas une politique 
 
 ```mermaid
 flowchart LR
-    O["ontology.ttl : vocabulaire OWL"] --> D["graphe RDF : vocabulaire + faits"]
-    A["data.ttl : trois expéditions"] --> D
-    S["shapes.ttl : deux règles SHACL-SPARQL"] --> E["pySHACL : cherche les motifs"]
-    D --> E
-    E --> R["graphe résultat : nouveaux triplets riskBand"]
-    R --> C["CLI français + fichier Turtle"]
+    O["ontology.ttl : vocabulaire OWL"] --> G["graphe RDF source : vocabulaire + faits"]
+    A["data.ttl : trois expéditions"] --> G
+    G --> P["pySHACL + shapes.ttl"]
+    P --> R["résultat SHACL : triplets riskBand"]
+    R --> C["commande SHACL + fichier Turtle"]
+    G --> X["extension SWRL : swrl-classes.ttl"]
+    X --> J["SWRLAPI + Drools (Java)"]
+    S["swrl/rules.txt : règles SWRL"] --> J
+    J --> I["résultat SWRL : types inférés"]
+    I --> W["commande SWRL + fichier Turtle"]
 ```
 
 - `ontology.ttl` nomme les types de choses et leurs propriétés : deux classes, une relation entre expédition et magasin, et deux propriétés de données.
-- `data.ttl` contient les faits fournis au départ. Le programme charge aussi les déclarations de l'ontologie dans le graphe qu'il transmet à pySHACL.
-- `shapes.ttl` indique à quelles expéditions appliquer les règles et contient leurs conditions et résultats.
-- RDFLib lit et manipule les graphes RDF ; pySHACL traite les règles SHACL-SPARQL activées par `advanced=True`.
-- Le graphe rendu par pySHACL contient les faits de départ et les faits ajoutés ; le CLI les affiche et écrit le graphe en Turtle.
+- `data.ttl` contient les faits fournis au départ. La commande SHACL transmet à pySHACL le vocabulaire de `ontology.ttl` et ces faits ; la commande SWRL réutilise aussi ces entrées.
+- `shapes.ttl` contient les deux règles SHACL-SPARQL de la démonstration initiale.
+- `rdf/swrl-classes.ttl` ajoute les deux classes de résultat SWRL, uniquement à la démonstration facultative.
+- RDFLib lit les graphes RDF ; pySHACL traite les règles SHACL-SPARQL activées par `advanced=True`. La commande SWRL passe un graphe indépendant au moteur Java SWRLAPI + Drools.
+- Chaque commande produit son propre graphe Turtle : SHACL ajoute `riskBand`, tandis que SWRL ajoute des appartenances à `WatchShipment` ou `UrgentShipment`.
 
 ## 3. Lire un premier triplet
 
@@ -60,7 +65,7 @@ Dans `rdf/ontology.ttl` :
 - `delayDays` donne le nombre de jours de retard.
 - `riskBand` est la propriété où l'on rangera la catégorie calculée (« bande de risque »).
 
-Les `rdfs:label` et `rdfs:comment` donnent des noms et explications en français. Le domaine et la portée documentent le type attendu des sujets et valeurs. Le POC ne lance pas de raisonneur OWL : il ne faut donc pas conclure que les règles de seuil sont exécutées par OWL.
+Les `rdfs:label` et `rdfs:comment` donnent des noms et explications en français. Le domaine et la portée documentent le type attendu des sujets et valeurs. La commande SHACL n'appelle pas de raisonneur OWL général ; la commande SWRL utilise un moteur séparé du profil OWL 2 RL, décrit plus loin.[60]
 
 ## 5. Traduire les deux règles
 
@@ -127,33 +132,21 @@ Le CLI annonce les conditions des deux règles, précise ce qu'est un triplet et
 
 Cela montre le lien entre le fait d'entrée, le filtre numérique et le triplet créé.
 
-## 9. Pourquoi SHACL-SPARQL ici et pas SWRL ?
+## 9. Deux approches de règles, deux résultats
 
-OWL 2 décrit le vocabulaire et les axiomes de l'ontologie. **SWRL** est une Member Submission du W3C pour écrire des règles liées à OWL, pas une Recommendation.[10]
+OWL décrit le vocabulaire. La règle exécutée par pySHACL est attachée à une forme SHACL et construit ici une valeur `riskBand`. La commande facultative SWRLAPI/Drools exécute des règles SWRL dans une ontologie OWL et ajoute des appartenances à des classes ; l'API décrit `infer()` comme l'import des faits et règles, leur exécution et l'écriture des connaissances inférées dans l'ontologie.[44]
 
-Le POC n'évalue aucun moteur SWRL : après l'arbitrage de stack, il exécute seulement les règles SHACL-SPARQL.
+SWRL est une Member Submission du W3C, pas une Recommendation.[10] Le moteur Drools de SWRLAPI est présenté comme un moteur SWRL et raisonneur OWL 2 RL ; ce n'est pas un raisonneur complet OWL 2 DL.[60]
 
-pySHACL 0.40.1 déclare Apache-2.0 (voir les métadonnées de la version et le texte de licence).[19][11]
+| Approche | Exécutée par quelle commande ? | Ce qu'elle ajoute dans ce POC | Limite / statut |
+|---|---|---|---|
+| SHACL-SPARQL | `python -m retail_owl_shacl_poc` | Une valeur `riskBand`, par exemple `"à surveiller"@fr` | Utilise les règles SHACL-AF prises en charge par pySHACL ; SHACL Core est une Recommendation et SHACL-AF une Working Group Note.[1][2] |
+| SWRL | `python -m retail_owl_shacl_poc.swrl_demo` | Un type OWL, `WatchShipment` ou `UrgentShipment` | Moteur Java/Maven optionnel, version SWRLAPI/Drools épinglée ; capacités du moteur à ne pas généraliser au-delà de son profil OWL 2 RL.[42][46][60] |
+| SPARQL `CONSTRUCT` | Non exécutée séparément | Pourrait construire des triplets RDF à partir d'un motif SPARQL | Alternative plus directe, mais sans les cibles/formes SHACL de cette démo. SPARQL 1.1 est une Recommendation.[7] |
+| OWL 2 RL / paquet Python `owlrl` | La bibliothèque Python n'est pas appelée par ces commandes | Pas de résultat produit par ce paquet dans le POC | À distinguer du moteur SWRLAPI/Drools, qui annonce lui-même une prise en charge OWL 2 RL.[6][21][60] |
+| RuleML | Présenté, non exécuté | Aucun résultat dans le POC | Une représentation de règles n'est pas, à elle seule, un moteur d'exécution.[10] |
 
-RDFLib 7.6.0 déclare BSD-3-Clause (métadonnées de la version et licence du projet).[20][17]
-
-OWL-RL 7.6.2 déclare la notice logicielle W3C, à conserver.[21][13]
-
-L'audit local des 14 paquets installés n'a trouvé aucune déclaration GPL/AGPL.
-
-Les licences retenues ne prévoient pas de redevance de licence, sous réserve de respecter les notices.[11][13][17]
-
-L'inventaire et les limites sont détaillés dans [`LICENSES.md`](../LICENSES.md).
-
-| Approche | Ce qu'elle ferait ici | Limite / statut |
-|---|---|---|
-| SHACL-SPARQL — exécuté | Calculer et ajouter `riskBand` au graphe | Requiert le support des règles SHACL-AF dans le moteur ; SHACL Core est une Recommendation et SHACL-AF une Working Group Note.[1][2] |
-| SWRL — présenté, non exécuté | Exprimer des règles liées aux classes et propriétés OWL | W3C Member Submission, pas une Recommendation. Moteur et licence à choisir séparément.[10] |
-| SPARQL `CONSTRUCT` — alternative | Construire les mêmes triplets sans forme/cible SHACL | Plus direct, mais la portée de la règle est moins clairement séparée en une forme. SPARQL 1.1 est une Recommendation.[7] |
-| OWL 2 RL / OWL-RL — bibliothèque présente, inférence non appelée | Déduire les conséquences prévues par le profil OWL 2 RL | Ne remplace pas les règles métier numériques de seuil dans ce scénario.[6][21] |
-| RuleML — présenté, non exécuté | Représenter/échanger des règles | Ce n'est pas, à lui seul, le moteur qui exécute les règles. |
-
-Les statuts W3C et les licences sont des critères différents : une Recommendation n'implique pas qu'un moteur donné soit libre ou gratuit, et une licence libre n'implique pas que le langage ait le statut Recommendation.
+Les deux démonstrations sont indépendantes et relisent les mêmes faits d'entrée ; elles n'appellent pas l'une l'autre. Elles illustrent la différence entre une propriété de données produite par SHACL et une appartenance à une classe inférée par SWRL. Pour la lecture guidée de la règle et les précautions sur le moteur Java, voir le [guide SWRL](guide-swrl.md).
 
 ## 10. Où apprendre les termes
 
@@ -166,9 +159,8 @@ Voir [Glossaire de départ](glossaire.md) pour les définitions de triplet, clas
 [6] https://www.w3.org/TR/owl2-profiles
 [7] https://www.w3.org/TR/sparql11-query
 [10] https://www.w3.org/submissions/SWRL
-[11] https://www.apache.org/licenses/LICENSE-2.0.html
-[13] https://github.com/RDFLib/OWL-RL/blob/master/LICENSE.txt
-[17] https://github.com/RDFLib/rdflib/blob/main/LICENSE
-[19] https://pypi.org/project/pyshacl/0.40.1
-[20] https://pypi.org/project/rdflib/7.6.0
 [21] https://pypi.org/project/owlrl/7.6.2
+[42] https://github.com/protegeproject/swrlapi-drools-engine
+[44] https://github.com/protegeproject/swrlapi/blob/master/src/main/java/org/swrlapi/core/SWRLRuleEngine.java
+[46] https://central.sonatype.com/artifact/edu.stanford.swrl/swrlapi-drools-engine/2.1.2
+[60] https://github.com/protegeproject/swrlapi-drools-engine/blob/master/README.md

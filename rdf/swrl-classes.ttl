@@ -1,0 +1,12 @@
+@prefix ex:   <https://example.org/retail#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Classes ajoutées uniquement à la démonstration SWRL.
+ex:WatchShipment a owl:Class ;
+    rdfs:label "Expédition à surveiller"@fr ;
+    rdfs:subClassOf ex:Shipment .
+
+ex:UrgentShipment a owl:Class ;
+    rdfs:label "Expédition urgente"@fr ;
+    rdfs:subClassOf ex:Shipment .

@@ -1,0 +1,3 @@
+# name|rule — écriture lisible SWRLAPI; les règles métier sont celles du guide.
+watch|ex:Shipment(?s) ^ ex:delayDays(?s, ?days) ^ swrlb:greaterThan(?days, 0) ^ swrlb:lessThan(?days, 3) -> ex:WatchShipment(?s)
+urgent|ex:Shipment(?s) ^ ex:delayDays(?s, ?days) ^ swrlb:greaterThanOrEqual(?days, 3) -> ex:UrgentShipment(?s)

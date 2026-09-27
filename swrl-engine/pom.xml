@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kekhermes.retail</groupId>
+  <artifactId>retail-swrl-demo</artifactId>
+  <version>0.1.0</version>
+  <name>Optional SWRL engine for the retail ontology POC</name>
+
+  <properties>
+    <maven.compiler.release>11</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <swrlapi.version>2.1.2</swrlapi.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>edu.stanford.swrl</groupId>
+      <artifactId>swrlapi-drools-engine</artifactId>
+      <version>${swrlapi.version}</version>
+      <exclusions>
+        <!-- This POC uses comparison built-ins only; JEP is the unused GPL-3.0 math parser. -->
+        <exclusion>
+          <groupId>org.scijava</groupId>
+          <artifactId>jep</artifactId>
+        </exclusion>
+        <!-- Checker annotations/checkers are not required by this runtime demonstration. -->
+        <exclusion>
+          <groupId>org.checkerframework</groupId>
+          <artifactId>checker</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.checkerframework</groupId>
+          <artifactId>checker-qual</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.checkerframework</groupId>
+          <artifactId>jdk8</artifactId>
+        </exclusion>
+        <!-- OWLAPI's RDF/XML path in this POC does not use JAXB or Activation. -->
+        <exclusion>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.activation</groupId>
+          <artifactId>javax.activation-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Drools 7.73 pins MVEL 2.4, which references java.lang.Compiler removed in Java 21. -->
+    <dependency>
+      <groupId>org.mvel</groupId>
+      <artifactId>mvel2</artifactId>
+      <version>2.5.2.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.7.31</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <executable>java</executable>
+          <classpathScope>runtime</classpathScope>
+          <arguments>
+            <argument>-classpath</argument>
+            <classpath/>
+            <argument>org.kekhermes.retail.SWRLDemo</argument>
+            <argument>${retail.swrl.input}</argument>
+            <argument>${retail.swrl.output}</argument>
+            <argument>${retail.swrl.rules}</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

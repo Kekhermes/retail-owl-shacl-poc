@@ -1,20 +1,21 @@
-# POC pédagogique : OWL et règles SHACL en logistique retail
+# POC pédagogique : OWL, SHACL-SPARQL et SWRL en logistique retail
 
-Ce petit projet local explique pas à pas comment représenter quelques faits de logistique retail et appliquer deux règles simples. Il est conçu pour débuter : **aucune connaissance préalable en ontologie, RDF ou règles métier n'est requise**.
+Ce projet local explique pas à pas comment représenter des faits de logistique retail et appliquer des règles. Il conserve la démonstration initiale OWL/RDF + SHACL-SPARQL et ajoute une démonstration SWRL distincte, facultative. Il est conçu pour débuter : **aucune connaissance préalable en ontologie, RDF ou règles métier n'est requise**.
 
 ## Ce que vous allez apprendre
 
 - reconnaître un fait RDF sous forme de triplet sujet–prédicat–objet ;
 - distinguer une classe (`Shipment`) d'un individu (`shipment_watch`) ;
 - comprendre une propriété qui relie deux ressources (`deliveredTo`) et une propriété qui porte une valeur (`delayDays`) ;
-- suivre la condition d'une règle jusqu'au fait ajouté au graphe ;
-- situer OWL, SHACL-SPARQL, SWRL et RuleML sans les confondre.
+- suivre une règle jusqu'au résultat qu'elle ajoute ou infère ;
+- comparer les résultats SHACL (`riskBand`) et SWRL (appartenance à une classe) sans confondre les deux moteurs.
 
 ## Avant de lancer
 
-- Python 3.11 ;
-- pas de service distant, de base de données, de conteneur ni de JVM ;
-- le POC ne fait pas de requête réseau à l'exécution.
+- Python 3.11 pour la démonstration SHACL existante ;
+- un JDK 11+ (`java` et `javac`) et Apache Maven uniquement pour la démonstration SWRL facultative ;
+- aucun service distant, aucune base de données ni conteneur ;
+- la commande SHACL par défaut ne requiert ni JVM ni accès réseau. La première exécution SWRL peut télécharger ses dépendances Java épinglées depuis Maven Central.
 
 ## Installer et lancer
 
@@ -27,6 +28,8 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 python -m retail_owl_shacl_poc
 ```
+
+La suite complète lance aussi le test d'intégration SWRL si un JDK 11+ et Maven sont présents ; sans eux, ce test est ignoré. Lorsqu'il s'exécute, Maven peut télécharger les dépendances Java au premier lancement.
 
 Le CLI explique les deux seuils et imprime le graphe résultat dans `artifacts/retail-logistics-result.ttl`.
 
@@ -46,10 +49,23 @@ shipment_urgent: retard=3 jour(s) -> urgent
 graphe résultat enregistré: artifacts/retail-logistics-result.ttl
 ```
 
+## Démonstration facultative SWRL
+
+Depuis la racine du projet, avec l'environnement Python activé et un JDK 11+ ainsi que Maven installés :
+
+```bash
+python -m retail_owl_shacl_poc.swrl_demo
+```
+
+Cette commande exécute les deux règles SWRL avec le moteur optionnel SWRLAPI + Drools, puis écrit `artifacts/retail-swrl-result.ttl`. Elle utilise les mêmes faits de départ que la démo SHACL, mais **n'exécute pas `shapes.ttl`** : les conclusions sont des types `WatchShipment` et `UrgentShipment`, pas les valeurs texte `riskBand` calculées par SHACL.[42][60]
+
+SWRL est une proposition de langage publiée comme Member Submission du W3C, et non comme Recommendation.[10]
+
 ## Lire d'abord
 
 1. [Glossaire de départ](docs/glossaire.md) — les mots techniques traduits en français avec un exemple du POC.
-2. [Lire la démo pas à pas](docs/guide-pedagogique.md) — le diagramme et le suivi manuel d'une expédition depuis les données jusqu'au triplet calculé.
+2. [Lire la démo SHACL pas à pas](docs/guide-pedagogique.md) — le diagramme et le suivi manuel d'une expédition depuis les données jusqu'au triplet calculé.
+3. [Découvrir SWRL](docs/guide-swrl.md) — règles, moteur optionnel, calculs illustrés et comparaison avec SHACL.
 
 ## Périmètre des règles
 
@@ -61,29 +77,32 @@ graphe résultat enregistré: artifacts/retail-logistics-result.ttl
 
 Ces seuils sont des exemples pédagogiques à valider avec les métiers avant tout usage réel. L'absence de bande calculée à 0 jour ne constitue pas une preuve générale d'absence de risque.
 
-## Important : ce POC n'exécute pas SWRL
+## Deux moteurs, deux résultats différents
 
-Le moteur du POC exécute des règles **SHACL-SPARQL** avec pySHACL. SWRL et RuleML sont expliqués et comparés dans le guide, mais aucune règle SWRL ou RuleML n'est exécutée par ce projet. OWL décrit ici le vocabulaire et les propriétés ; le code ne lance pas de raisonneur OWL général.
+La commande par défaut (`python -m retail_owl_shacl_poc`) conserve la démonstration initiale : elle exécute les règles SHACL-SPARQL avec pySHACL et ajoute des valeurs `riskBand` au graphe. La commande facultative `python -m retail_owl_shacl_poc.swrl_demo` exécute séparément des règles SWRL avec SWRLAPI + Drools. Le moteur Drools se décrit comme un moteur de règles SWRL et un raisonneur OWL 2 RL ; il ne faut pas le présenter comme un raisonneur complet OWL 2 DL.[60]
+
+La démo SWRL ajoute une appartenance à `WatchShipment` ou `UrgentShipment`, pas une valeur `riskBand`. SWRL est une Member Submission du W3C, pas une Recommendation.[10]
 
 ## Licences
 
-L'inventaire de [`LICENSES.md`](LICENSES.md) couvre les 14 paquets résolus (10 runtime, 4 de développement/test), pas uniquement les paquets directs.
+`LICENSES.md` distingue les 14 paquets Python résolus (10 runtime, 4 développement/test) et les 66 dépendances runtime Java/Maven de la démo SWRL facultative, inventoriées dans [`swrl-engine/THIRD-PARTY.txt`](swrl-engine/THIRD-PARTY.txt). SWRLAPI + Drools sont épinglés en version 2.1.2 et déclarent BSD-2-Clause.[46][47][60]
 
-Les versions épinglées de pySHACL et RDFLib déclarent respectivement Apache-2.0 et BSD-3-Clause.[19][20]
+La fermeture OWLAPI 4.5.25 est duale Apache-2.0/LGPL-3.0 ; elle propose l'option Apache-2.0.[49][51]
 
-OWL-RL déclare la notice logicielle W3C ; ses conditions et les notices à conserver sont liées dans l'inventaire.[21][13]
+Une dépendance transitive, MXParser, impose aussi une attribution, conservée dans [`swrl-engine/NOTICE.md`](swrl-engine/NOTICE.md).[54][56]
 
-L'audit local de ces 14 paquets n'a relevé aucune déclaration GPL/AGPL.
+Le contrôle du rapport Maven final n'a trouvé aucune entrée GPL/AGPL ni licence inconnue dans la fermeture Java résolue. Certaines dépendances amont sous GPL ont été exclues car inutiles aux deux règles de comparaison exécutées ici ; toute extension des règles ou des bibliothèques nécessite un nouvel audit. Les notices restent obligatoires et ce relevé n'est pas un avis juridique.
 
-Les licences permettent un usage sans redevance, sous réserve de respecter leurs conditions et notices.[11][13][17]
-
-Refaire l'audit de la fermeture des dépendances réellement déployées avant toute mise en production, car les versions transitives peuvent évoluer.
+L'inventaire couvre les dépendances, pas la licence du code de ce POC. Refaire l'audit des dépendances réellement déployées avant tout usage en production.
 
 ## Sources
 
-[11] https://www.apache.org/licenses/LICENSE-2.0.html
-[13] https://github.com/RDFLib/OWL-RL/blob/master/LICENSE.txt
-[17] https://github.com/RDFLib/rdflib/blob/main/LICENSE
-[19] https://pypi.org/project/pyshacl/0.40.1
-[20] https://pypi.org/project/rdflib/7.6.0
-[21] https://pypi.org/project/owlrl/7.6.2
+[10] https://www.w3.org/submissions/SWRL
+[42] https://github.com/protegeproject/swrlapi-drools-engine
+[46] https://central.sonatype.com/artifact/edu.stanford.swrl/swrlapi-drools-engine/2.1.2
+[47] https://central.sonatype.com/artifact/edu.stanford.swrl/swrlapi/2.1.2
+[49] https://github.com/owlcs/owlapi
+[51] https://central.sonatype.com/artifact/net.sourceforge.owlapi/owlapi-osgidistribution/4.5.25
+[54] https://central.sonatype.com/artifact/io.github.x-stream/mxparser/1.2.2
+[56] https://raw.githubusercontent.com/x-stream/mxparser/master/LICENSE.txt
+[60] https://github.com/protegeproject/swrlapi-drools-engine/blob/master/README.md
