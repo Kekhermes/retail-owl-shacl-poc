@@ -18,4 +18,8 @@ def test_cli_explains_results_and_exports_graph(tmp_path: Path, capsys):
     assert 'triplet ajouté: sujet=shipment_watch ; prédicat=riskBand ; objet="à surveiller"@fr' in printed
     assert 'triplet ajouté: sujet=shipment_urgent ; prédicat=riskBand ; objet="urgent"@fr' in printed
     assert f"graphe résultat enregistré: {output}" in printed
+    assert "diagramme Mermaid enregistré:" in printed
+    assert "visualisation interactive HTML enregistrée:" in printed
     assert output.exists()
+    assert (tmp_path / "ontology.mmd").exists()
+    assert (tmp_path / "ontology-graph.html").exists()

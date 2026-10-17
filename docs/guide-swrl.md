@@ -29,6 +29,23 @@ La démo SWRL reprend les mêmes expéditions et les mêmes retards dans `rdf/on
 
 Ces deux classes sont déclarées comme sous-classes de `Shipment`. Cette extension n'est chargée que par la démo SWRL : le vocabulaire existant de la démo SHACL n'est pas modifié.
 
+```mermaid
+classDiagram
+    direction LR
+    class Shipment {
+        +integer delayDays
+    }
+    class Store {
+    }
+    class WatchShipment {
+    }
+    class UrgentShipment {
+    }
+    Shipment <|-- WatchShipment : subClassOf
+    Shipment <|-- UrgentShipment : subClassOf
+    Shipment --> Store : deliveredTo
+```
+
 À la fin, les deux démonstrations ne produisent pas le même genre de fait :
 
 ```text

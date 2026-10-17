@@ -67,6 +67,22 @@ Dans `rdf/ontology.ttl` :
 
 Les `rdfs:label` et `rdfs:comment` donnent des noms et explications en français. Le domaine et la portée documentent le type attendu des sujets et valeurs. La commande SHACL n'appelle pas de raisonneur OWL général ; la commande SWRL utilise un moteur séparé du profil OWL 2 RL, décrit plus loin.[60]
 
+### Diagramme de l'ontologie
+
+```mermaid
+classDiagram
+    direction LR
+    class Shipment {
+        +integer delayDays
+        +langString riskBand
+    }
+    class Store {
+    }
+    Shipment --> Store : deliveredTo
+```
+
+Une visualisation interactive complète (graphe dynamique avec zoom, filtres T-Box/A-Box et inspection au clic) est générée automatiquement à chaque lancement dans `artifacts/ontology-graph.html`. Il suffit de l'ouvrir dans un navigateur web sans serveur.
+
 ## 5. Traduire les deux règles
 
 ### Règle 1 — retard à surveiller

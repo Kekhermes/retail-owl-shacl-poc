@@ -4,6 +4,7 @@ from rdflib import Namespace
 
 from .engine import build_demo_graph
 from .export import save_graph
+from .visualization import export_visualizations
 
 EX = Namespace("https://example.org/retail#")
 SHIPMENTS = (
@@ -39,3 +40,6 @@ def main(output_path: str | Path = Path("artifacts/retail-logistics-result.ttl")
             )
 
     print(f"graphe résultat enregistré: {destination}")
+    viz_artifacts = export_visualizations(graph, Path(destination).parent)
+    print(f"diagramme Mermaid enregistré: {viz_artifacts['mermaid']}")
+    print(f"visualisation interactive HTML enregistrée: {viz_artifacts['html']}")

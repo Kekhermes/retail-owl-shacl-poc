@@ -47,7 +47,35 @@ shipment_watch: retard=2 jour(s) -> à surveiller
 shipment_urgent: retard=3 jour(s) -> urgent
   triplet ajouté: sujet=shipment_urgent ; prédicat=riskBand ; objet="urgent"@fr
 graphe résultat enregistré: artifacts/retail-logistics-result.ttl
+diagramme Mermaid enregistré: artifacts/ontology.mmd
+visualisation interactive HTML enregistrée: artifacts/ontology-graph.html
 ```
+
+## Visualisation graphique de l'ontologie
+
+Le projet propose deux visualisations complémentaires sans aucune dépendance lourde :
+
+1. **Diagramme statique Mermaid (intégré à GitHub et aux guides Markdown)** :
+   Affiche la hiérarchie des classes, relations d'objet (`deliveredTo`) et propriétés de données (`delayDays`, `riskBand`). Rendu nativement par l'interface GitHub :
+
+   ```mermaid
+   classDiagram
+       direction LR
+       class Shipment {
+           +integer delayDays
+           +langString riskBand
+       }
+       class Store {
+       }
+       Shipment --> Store : deliveredTo
+   ```
+
+2. **Visualisation interactive autonome HTML (`artifacts/ontology-graph.html`)** :
+   Générée automatiquement par `python -m retail_owl_shacl_poc` (ou via `python -m retail_owl_shacl_poc.visualization`).
+   - S'ouvre directement par double-clic dans n'importe quel navigateur (aucun serveur web requis).
+   - Graphe dynamique avec force-directed layout (Vis.js).
+   - Filtres interactifs : vue Vocabulaire seul (**T-Box**), vue Faits et Inférences (**A-Box**), ou vue globale.
+   - Panneau latéral affichant les `rdfs:label`, `rdfs:comment` et valeurs calculées au clic sur les nœuds.
 
 ## Démonstration facultative SWRL
 
